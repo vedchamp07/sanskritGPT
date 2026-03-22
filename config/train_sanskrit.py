@@ -1,5 +1,6 @@
 # config/train_sanskrit.py
-# SanskritGPT — 29M parameter model trained on Sanskrit corpus
+# SanskritGPT — 60M params (35M embeddings + 25M transformer layers)
+# large embedding table due to Sarvam vocab size (68096)
 # Run: python train.py config/train_sanskrit.py
 
 # I/O
@@ -12,9 +13,9 @@ init_from = 'scratch'
 
 # data
 dataset = 'sanskrit'
-gradient_accumulation_steps = 8   # effective batch = 8 * 32 = 256 sequences
-batch_size = 32
-block_size = 512
+gradient_accumulation_steps = 32  # effective batch = 32 * 8 = 256 sequences
+batch_size = 8
+block_size = 256
 
 # model — 29M params
 # 8 layers * (512*512*4 MLP + 512*512 attn) ~ 29M
