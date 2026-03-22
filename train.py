@@ -31,7 +31,7 @@ eval_only = False
 always_save_checkpoint = True
 init_from = 'scratch'  # 'scratch' or 'resume'
 # wandb logging
-wandb_log = False
+wandb_log = True
 wandb_project = 'sanskrit-gpt'
 wandb_run_name = 'sanskrit-gpt'
 # data
@@ -186,6 +186,8 @@ while True:
     if iter_num % eval_interval == 0:
         losses = estimate_loss()
         print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        with open(os.path.join(out_dir, 'losses.csv'), 'a') as f:
+            f.write(f"{iter_num},{losses['train']:.4f},{losses['val']:.4f}\n")
         if wandb_log:
             wandb.log({"iter": iter_num, "train/loss": losses['train'], "val/loss": losses['val'], "lr": lr})
         if losses['val'] < best_val_loss or always_save_checkpoint:
