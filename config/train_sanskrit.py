@@ -44,6 +44,6 @@ dtype = 'float16'          # P100 does not support bfloat16
 compile = False            # torch.compile unreliable on P100
 
 # wandb — set to True if you want loss curves logged
-wandb_log = False
+wandb_log = True
 wandb_project = 'sanskrit-gpt'
-wandb_run_name = 'sanskrit-gpt-29m'
+wandb_run_name = 'sanskrit-gpt'
