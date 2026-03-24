@@ -204,6 +204,11 @@ while True:
                 print(f"saving checkpoint to {out_dir}")
                 torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
 
+                if wandb_log:
+                    artifact = wandb.Artifact(name=f"model-at-step-{iter_num}", type="model")
+                    artifact.add_file(ckpt_path)
+                    wandb.log_artifact(artifact)
+
     if iter_num == 0 and eval_only:
         break
 
