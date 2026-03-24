@@ -26,7 +26,7 @@ bias = False
 
 # optimizer
 learning_rate = 3e-4
-max_iters = 20000
+max_iters = 17500
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -35,7 +35,7 @@ grad_clip = 1.0
 # lr schedule — cosine decay with warmup
 decay_lr = True
 warmup_iters = 500
-lr_decay_iters = 20000
+lr_decay_iters = 17500
 min_lr = 3e-5
 
 # system
