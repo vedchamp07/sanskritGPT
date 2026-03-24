@@ -192,7 +192,7 @@ while True:
             wandb.log({"iter": iter_num, "train/loss": losses['train'], "val/loss": losses['val'], "lr": lr})
         if losses['val'] < best_val_loss or always_save_checkpoint:
             best_val_loss = losses['val']
-            if iter_num > 0:
+        if iter_num > 0:
                 checkpoint = {
                     'model': model.state_dict(),
                     'optimizer': optimizer.state_dict(),
@@ -201,11 +201,21 @@ while True:
                     'best_val_loss': best_val_loss,
                     'config': config,
                 }
-                print(f"saving checkpoint to {out_dir}")
-                torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+                # 1. Define the path clearly once
+                ckpt_path = os.path.join(out_dir, 'ckpt.pt')
+                print(f"saving checkpoint to {ckpt_path}")
+                
+                # 2. Save to local disk
+                torch.save(checkpoint, ckpt_path)
 
+                # 3. Log to W&B Artifacts (if enabled)
                 if wandb_log:
-                    artifact = wandb.Artifact(name=f"model-at-step-{iter_num}", type="model")
+                    import wandb
+                    artifact = wandb.Artifact(
+                        name=f"{wandb_run_name}-ckpt", 
+                        type='model',
+                        description=f"Checkpoint at step {iter_num}"
+                    )
                     artifact.add_file(ckpt_path)
                     wandb.log_artifact(artifact)
 
