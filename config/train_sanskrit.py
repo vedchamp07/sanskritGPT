@@ -4,7 +4,7 @@
 
 # I/O
 import os
-out_dir = '/kaggle/working/sanskrit-gpt-out'
+out_dir = '/kaggle/output/out-sanskrit'
 eval_interval = 250        # checkpoint every 250 steps (~9 mins)
 log_interval = 10
 eval_iters = 100

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sanskritGPT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* Theme variables                                                      */
+    /* ------------------------------------------------------------------ */
+    [data-theme="light"] {
+      --bg:          #faf8f4;
+      --bg2:         #f3efe8;
+      --bg3:         #ebe5d8;
+      --border:      #d8d0c0;
+      --border-focus:#a89060;
+      --gold:        #8a6a20;
+      --gold-dim:    #b08840;
+      --text:        #2a2420;
+      --text-dim:    #6a5e50;
+      --text-faint:  #b0a090;
+      --red:         #b04030;
+      --shadow:      rgba(0,0,0,0.06);
+    }
+
+    [data-theme="dark"] {
+      --bg:          #201c18;
+      --bg2:         #25221d;
+      --bg3:         #2b2722;
+      --border:      #3a352b;
+      --border-focus:#6f5d38;
+      --gold:        #b9974a;
+      --gold-dim:    #9a7e46;
+      --text:        #d8d0c0;
+      --text-dim:    #a09078;
+      --text-faint:  #615744;
+      --red:         #b86b5c;
+      --shadow:      rgba(0,0,0,0.12);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Reset                                                                */
+    /* ------------------------------------------------------------------ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1rem 5rem;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Header                                                               */
+    /* ------------------------------------------------------------------ */
+    header {
+      width: 100%;
+      max-width: 700px;
+      padding: 3rem 0 1.75rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    h1 em {
+      color: var(--gold);
+      font-style: normal;
+    }
+
+    .badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--gold-dim);
+      border: 1px solid var(--gold-dim);
+      padding: 0.12rem 0.45rem;
+      border-radius: 2px;
+      letter-spacing: 0.08em;
+    }
+
+    .tagline {
+      font-size: 1rem;
+      color: var(--text-dim);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Theme toggle                                                         */
+    /* ------------------------------------------------------------------ */
+    .theme-toggle {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.25rem;
+      display: flex;
+      gap: 0.15rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      width: 28px;
+      height: 24px;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      color: var(--text-dim);
+    }
+
+    .theme-toggle button.active {
+      background: var(--bg3);
+      color: var(--text);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Main                                                                 */
+    /* ------------------------------------------------------------------ */
+    main {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Presets                                                              */
+    /* ------------------------------------------------------------------ */
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text-faint);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.55rem;
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .preset-btn {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.9rem;
+      padding: 0.3rem 0.75rem;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--gold-dim);
+      color: var(--text);
+      background: var(--bg3);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Textarea                                                             */
+    /* ------------------------------------------------------------------ */
+    textarea {
+      width: 100%;
+      min-height: 96px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      font-size: 1.2rem;
+      line-height: 1.7;
+      padding: 0.9rem 1.1rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s, background 0.25s;
+      box-shadow: inset 0 1px 3px var(--shadow);
+    }
+
+    textarea::placeholder {
+      color: var(--text-faint);
+      font-style: italic;
+    }
+
+    textarea:focus {
+      border-color: var(--border-focus);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Controls                                                             */
+    /* ------------------------------------------------------------------ */
+    .controls {
+      display: flex;
+      align-items: flex-end;
+      gap: 1.75rem;
+      flex-wrap: wrap;
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .slider-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      width: 140px;
+    }
+
+    .slider-label span { color: var(--gold); }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 140px;
+      height: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      background: var(--gold-dim);
+      border-radius: 50%;
+      transition: transform 0.1s, background 0.1s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      background: var(--gold);
+    }
+
+    .generate-btn {
+      margin-left: auto;
+      background: var(--gold-dim);
+      border: none;
+      color: var(--bg);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.5rem;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    [data-theme="light"] .generate-btn { color: #fff; }
+
+    .generate-btn:hover:not(:disabled) {
+      background: var(--gold);
+    }
+
+    .generate-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Output                                                               */
+    /* ------------------------------------------------------------------ */
+    .output-section {
+      display: none;
+      flex-direction: column;
+      gap: 0.6rem;
+      animation: fadeUp 0.25s ease;
+    }
+
+    .output-section.visible { display: flex; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .output-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .token-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.08em;
+    }
+
+    .output-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.1rem 1.2rem;
+      font-size: 1.2rem;
+      line-height: 1.9;
+      min-height: 80px;
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    .output-prompt   { color: var(--text-dim); }
+    .output-completion { color: var(--text); }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--gold);
+      margin-left: 1px;
+      vertical-align: text-bottom;
+      animation: blink 0.75s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Error                                                                */
+    /* ------------------------------------------------------------------ */
+    .error-box {
+      display: none;
+      background: var(--bg2);
+      border: 1px solid var(--red);
+      border-radius: 3px;
+      padding: 0.75rem 1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--red);
+      line-height: 1.5;
+    }
+
+    .error-box.visible { display: block; }
+
+    /* ------------------------------------------------------------------ */
+    /* Footer                                                               */
+    /* ------------------------------------------------------------------ */
+    footer {
+      width: 100%;
+      max-width: 700px;
+      margin-top: 3.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text-faint);
+      display: flex;
+      justify-content: space-between;
+      letter-spacing: 0.08em;
+    }
+
+    footer a { color: var(--text-faint); text-decoration: none; transition: color 0.15s; }
+    footer a:hover { color: var(--gold-dim); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-row">
+      <div class="title-group">
+        <h1>sanskrit<em>GPT</em></h1>
+        <div class="badge">60M params</div>
+      </div>
+      <div class="theme-toggle" id="theme-toggle" title="Toggle theme">
+        <button id="btn-light" class="active" onclick="setTheme('light')">☀️</button>
+        <button id="btn-dark"  onclick="setTheme('dark')">🌙</button>
+      </div>
+    </div>
+    <p class="tagline">A GPT-2 language model trained on Sanskrit — Vedas, Upanishads, Wikipedia.<br>Type a prompt in Devanagari and watch the model continue it.</p>
+  </header>
+
+  <main>
+
+    <div>
+      <div class="section-label">try a preset</div>
+      <div class="presets" id="presets">
+        <button class="preset-btn" data-text="अग्निमीळे पुरोहितं यज्ञस्य देवमृत्विजम्">Rigveda</button>
+        <button class="preset-btn" data-text="धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः">Bhagavad Gita</button>
+        <button class="preset-btn" data-text="अहं ब्रह्मास्मि">Upanishad</button>
+        <button class="preset-btn" data-text="रामो विग्रहवान् धर्मः साधुः सत्यपराक्रमः">Ramayana</button>
+      </div>
+    </div>
+
+    <div>
+      <textarea id="prompt" placeholder="संस्कृतम् लिखतु… (type Sanskrit here, or pick a preset above)"></textarea>
+      <div style="height:0.75rem"></div>
+      <div class="controls">
+        <div class="slider-group">
+          <div class="slider-label">Temperature <span id="temp-val">0.8</span></div>
+          <input type="range" id="temperature" min="0.1" max="1.5" step="0.05" value="0.8" />
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">Max tokens <span id="tokens-val">150</span></div>
+          <input type="range" id="max-tokens" min="20" max="400" step="10" value="150" />
+        </div>
+        <button class="generate-btn" id="generate-btn">Generate →</button>
+      </div>
+    </div>
+
+    <div class="error-box" id="error-box"></div>
+
+    <div class="output-section" id="output-section">
+      <div class="output-meta">
+        <div class="section-label" style="margin:0">completion</div>
+        <div class="token-count" id="token-count"></div>
+      </div>
+      <div class="output-box" id="output-box"></div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span>forked from <a href="https://github.com/karpathy/nanoGPT">nanoGPT</a> · trained on Sanskrit corpus</span>
+    <a href="https://github.com/vedchamp07/sanskritGPT">github ↗</a>
+  </footer>
+
+  <script>
+    // -----------------------------------------------------------------------
+    // Config — update this once backend is deployed on HuggingFace Spaces
+    // -----------------------------------------------------------------------
+    const API_BASE = 'http://localhost:8000';
+
+    // -----------------------------------------------------------------------
+    // Theme
+    // -----------------------------------------------------------------------
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+      document.getElementById('btn-dark').classList.toggle('active',  theme === 'dark');
+      localStorage.setItem('theme', theme);
+    }
+
+    // restore saved theme
+    const saved = localStorage.getItem('theme');
+    if (saved) setTheme(saved);
+
+    // -----------------------------------------------------------------------
+    // Elements
+    // -----------------------------------------------------------------------
+    const promptEl    = document.getElementById('prompt');
+    const generateBtn = document.getElementById('generate-btn');
+    const outputSec   = document.getElementById('output-section');
+    const outputBox   = document.getElementById('output-box');
+    const errorBox    = document.getElementById('error-box');
+    const tokenCount  = document.getElementById('token-count');
+    const tempSlider  = document.getElementById('temperature');
+    const tokensSlider= document.getElementById('max-tokens');
+
+    tempSlider.addEventListener('input',   () => document.getElementById('temp-val').textContent   = tempSlider.value);
+    tokensSlider.addEventListener('input', () => document.getElementById('tokens-val').textContent = tokensSlider.value);
+
+    // -----------------------------------------------------------------------
+    // Presets
+    // -----------------------------------------------------------------------
+    document.getElementById('presets').addEventListener('click', e => {
+      if (e.target.dataset.text) {
+        promptEl.value = e.target.dataset.text;
+        promptEl.focus();
+      }
+    });
+
+    // -----------------------------------------------------------------------
+    // Typewriter
+    // -----------------------------------------------------------------------
+    function typewrite(el, promptText, completionText, speed = 20) {
+      el.innerHTML = `<span class="output-prompt">${promptText}</span>`;
+      const cursor = document.createElement('span');
+      cursor.className = 'cursor';
+      el.appendChild(cursor);
+      let i = 0;
+      const iv = setInterval(() => {
+        if (i < completionText.length) {
+          cursor.insertAdjacentText('beforebegin', completionText[i++]);
+        } else {
+          clearInterval(iv);
+          cursor.remove();
+        }
+      }, speed);
+    }
+
+    // -----------------------------------------------------------------------
+    // Generate
+    // -----------------------------------------------------------------------
+    async function generate() {
+      const prompt = promptEl.value.trim();
+      if (!prompt) return;
+
+      errorBox.classList.remove('visible');
+      outputSec.classList.remove('visible');
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Generating…';
+
+      try {
+        const res = await fetch(`${API_BASE}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            max_new_tokens: parseInt(tokensSlider.value),
+            temperature:    parseFloat(tempSlider.value),
+            top_k: 100,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        outputSec.classList.add('visible');
+        tokenCount.textContent = `${data.tokens_generated} tokens generated`;
+        typewrite(outputBox, data.prompt, data.completion);
+
+      } catch (err) {
+        errorBox.textContent = `Error: ${err.message}. Is the backend running at ${API_BASE}?`;
+        errorBox.classList.add('visible');
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate →';
+      }
+    }
+
+    generateBtn.addEventListener('click', generate);
+    promptEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) generate();
+    });
+  </script>
+
+</body>
+</html>
