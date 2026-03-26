@@ -47,6 +47,24 @@ GPT-2 style decoder-only transformer, trained from scratch.
 
 ---
 
+## Inference
+
+The trained checkpoint is hosted on HuggingFace. To download it locally:
+
+```bash
+huggingface-cli download vedchamp07/sanskritGPT ckpt.pt --local-dir ./out-sanskrit
+python sample.py --out_dir=out-sanskrit --start="नमस्ते"
+```
+
+Or run the web UI (requires the checkpoint to be at `out-sanskrit/ckpt.pt`):
+
+```bash
+cd backend && uvicorn app:app --host 0.0.0.0 --port 8000
+# then open frontend/index.html in a browser
+```
+
+---
+
 ## Reproduce
 
 ```bash
