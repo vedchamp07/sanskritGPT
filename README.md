@@ -29,7 +29,7 @@ GPT-2 style decoder-only transformer, trained from scratch.
 | Layers          | 8                     |
 | Attention heads | 8                     |
 | Embedding dim   | 512                   |
-| Context length  | 512 tokens            |
+| Context length  | 256 tokens            |
 | Vocab size      | 68,096                |
 | Dropout         | 0.1                   |
 | Trained on      | Kaggle P100, ~6 hours |
@@ -69,15 +69,22 @@ python sample.py --out_dir=out-sanskrit --start="नमस्ते"
 
 ```
 sanskritGPT/
-├── model.py                  # GPT-2 architecture
-├── train.py                  # training loop
-├── sample.py                 # inference
-├── configurator.py           # config override utility
+├── model.py                       # GPT-2 architecture
+├── train.py                       # training loop
+├── sample.py                      # inference
+├── configurator.py                # config override utility
+├── sanskrit-gpt.ipynb             # training notebook (Kaggle)
 ├── config/
-│   └── train_sanskrit.py     # hyperparameters for this run
+│   ├── train_sanskrit.py          # hyperparameters for this run
+│   └── train_shakespeare_char.py  # Shakespeare baseline
 ├── data/sanskrit/
-│   └── prepare.py            # data pipeline
-└── ARCHITECTURE.md           # notes on how GPT-2 works
+│   └── prepare.py                 # data pipeline
+├── backend/
+│   ├── app.py                     # FastAPI inference server
+│   └── requirements.txt
+├── frontend/
+│   └── index.html                 # web UI
+└── ARCHITECTURE.md                # notes on how GPT-2 works
 ```
 
 ---

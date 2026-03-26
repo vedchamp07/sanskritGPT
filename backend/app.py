@@ -1,5 +1,4 @@
-"""
-backend/app.py
+"""backend/app.py
 
 FastAPI inference server for sanskritGPT.
 Loads checkpoint once at startup, serves generation requests.
@@ -10,18 +9,19 @@ Usage:
 
 Environment variables:
     CHECKPOINT_PATH  path to ckpt.pt  (default: ../out-sanskrit/ckpt.pt)
-    DEVICE           cuda or cpu      (default: cpu)
+    DEVICE           cuda or cpu      (default: auto)
 """
 
 import os
 import sys
 import torch
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from transformers import AutoTokenizer
 
-# add parent dir to path so we can import model.py
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from model import GPTConfig, GPT
 
@@ -33,32 +33,43 @@ DEVICE          = os.environ.get("DEVICE", "cuda" if torch.cuda.is_available() e
 TOKENIZER_ID    = "sarvamai/sarvam-1"
 MAX_TOKENS_CAP  = 500
 
-# ---------------------------------------------------------------------------
-# Load model + tokenizer at startup
-# ---------------------------------------------------------------------------
-print(f"Loading checkpoint from {CHECKPOINT_PATH} on {DEVICE} ...")
-checkpoint = torch.load(CHECKPOINT_PATH, map_location=DEVICE)
-gptconf    = GPTConfig(**checkpoint['model_args'])
-model      = GPT(gptconf)
+model     = None
+tokenizer = None
+ready     = False
 
-state_dict = checkpoint['model']
-unwanted_prefix = '_orig_mod.'
-for k, v in list(state_dict.items()):
-    if k.startswith(unwanted_prefix):
-        state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-model.load_state_dict(state_dict)
-model.eval()
-model.to(DEVICE)
-print(f"Model loaded — {sum(p.numel() for p in model.parameters()):,} parameters")
+# ---------------------------------------------------------------------------
+# Lifespan: load model + tokenizer at startup
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global model, tokenizer, ready
 
-print(f"Loading tokenizer: {TOKENIZER_ID} ...")
-tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_ID)
-print("Ready.")
+    print(f"Loading checkpoint from {CHECKPOINT_PATH} on {DEVICE} ...")
+    checkpoint = torch.load(CHECKPOINT_PATH, map_location=DEVICE, weights_only=False)
+    gptconf    = GPTConfig(**checkpoint['model_args'])
+    model      = GPT(gptconf)
+
+    state_dict = checkpoint['model']
+    unwanted_prefix = '_orig_mod.'
+    for k, v in list(state_dict.items()):
+        if k.startswith(unwanted_prefix):
+            state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
+    model.load_state_dict(state_dict)
+    model.eval()
+    model.to(DEVICE)
+    print(f"Model loaded — {sum(p.numel() for p in model.parameters()):,} parameters")
+
+    print(f"Loading tokenizer: {TOKENIZER_ID} ...")
+    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_ID)
+
+    ready = True
+    print("Ready.")
+    yield
 
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
-app = FastAPI(title="sanskritGPT", version="1.0")
+app = FastAPI(title="sanskritGPT", version="1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -81,17 +92,20 @@ class GenerateResponse(BaseModel):
 
 @app.get("/")
 def root():
+    if not ready:
+        return JSONResponse(status_code=503, content={"status": "loading"})
     return {"status": "ok", "model": "sanskritGPT", "device": DEVICE}
 
 @app.post("/generate", response_model=GenerateResponse)
 def generate(req: GenerateRequest):
+    if not ready:
+        raise HTTPException(status_code=503, detail="Model is still loading, please retry in a moment")
     if not req.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
 
     max_tokens = min(req.max_new_tokens, MAX_TOKENS_CAP)
-
-    input_ids = tokenizer.encode(req.prompt, add_special_tokens=False)
-    x = torch.tensor(input_ids, dtype=torch.long, device=DEVICE)[None, ...]
+    input_ids  = tokenizer.encode(req.prompt, add_special_tokens=False)
+    x          = torch.tensor(input_ids, dtype=torch.long, device=DEVICE)[None, ...]
 
     with torch.no_grad():
         y = model.generate(x, max_tokens, temperature=req.temperature, top_k=req.top_k)
@@ -110,10 +124,9 @@ def generate(req: GenerateRequest):
 
 @app.get("/presets")
 def presets():
-    """Return preset Sanskrit prompts for the UI."""
     return {"presets": [
-        {"label": "Rigveda", "text": "अग्निमीळे पुरोहितं यज्ञस्य देवमृत्विजम्"},
+        {"label": "Rigveda",       "text": "अग्निमीळे पुरोहितं यज्ञस्य देवमृत्विजम्"},
         {"label": "Bhagavad Gita", "text": "धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः"},
-        {"label": "Upanishad", "text": "अहं ब्रह्मास्मि"},
-        {"label": "Ramayana", "text": "रामो विग्रहवान् धर्मः साधुः सत्यपराक्रमः"},
+        {"label": "Upanishad",     "text": "अहं ब्रह्मास्मि"},
+        {"label": "Ramayana",      "text": "रामो विग्रहवान् धर्मः साधुः सत्यपराक्रमः"},
     ]}

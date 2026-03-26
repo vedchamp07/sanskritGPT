@@ -201,16 +201,11 @@ while True:
                     'best_val_loss': best_val_loss,
                     'config': config,
                 }
-                # 1. Define the path clearly once
                 ckpt_path = os.path.join(out_dir, 'ckpt.pt')
                 print(f"saving checkpoint to {ckpt_path}")
-                
-                # 2. Save to local disk
                 torch.save(checkpoint, ckpt_path)
 
-                # 3. Log to W&B Artifacts (if enabled)
                 if wandb_log:
-                    import wandb
                     artifact = wandb.Artifact(
                         name=f"{wandb_run_name}-ckpt", 
                         type='model',

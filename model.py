@@ -1,10 +1,3 @@
-"""Sanskrit GPT-2 implementation using Sarvam AI's tokenizer.
-
-This module implements a GPT-style language model intended for training from
-scratch on Sanskrit text tokenized with Sarvam AI's tokenizer (vocab size
-68096). The implementation is a compact GPT-2 style model suitable for
-experimentation and training.
-"""
 
 import math
 import inspect
@@ -45,8 +38,6 @@ class CausalSelfAttention(nn.Module):
         self.n_embd = config.n_embd
         self.dropout = config.dropout
 
-        # Use PyTorch's scaled_dot_product_attention (requires PyTorch >= 2.0).
-        # We rely on the built-in efficient attention implementation.
 
     def forward(self, x):
         B, T, C = x.size()  # batch size, sequence length, embedding dimensionality (n_embd)

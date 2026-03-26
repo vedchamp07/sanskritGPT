@@ -1,5 +1,5 @@
 # config/train_sanskrit.py
-# SanskritGPT — 60M parameter model trained on Sanskrit corpus
+# SanskritGPT — 29M parameter model trained on Sanskrit corpus
 # Run: python train.py config/train_sanskrit.py
 
 # I/O
@@ -17,7 +17,7 @@ gradient_accumulation_steps = 32
 batch_size = 8
 block_size = 256
 
-# model — ~60M params (35M embeddings + 25M transformer layers)
+# model — ~29M params (vocab embeddings are weight-tied with lm_head)
 n_layer = 8
 n_head = 8
 n_embd = 512
@@ -46,4 +46,4 @@ compile = False
 # wandb
 wandb_log = True
 wandb_project = 'sanskrit-gpt'
-wandb_run_name = 'sanskrit-gpt-60m'
+wandb_run_name = 'sanskrit-gpt-29m'
